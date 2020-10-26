@@ -5,11 +5,15 @@
 获取github代码：
 
 git clone https://github.com/PaddlePaddle/Knover
+
 cd Knover
+
 git checkout luge-dialogue
+
 链接基线模型需要的配置：
 
 ln  -s ./luge-dialogue/config ./config
+
 1. 准备数据
 模型训练和预测之前，都需要准备好所需的数据。首先，将比赛官网获取的数据放到当前环境中，具体目录可自行选择。数据获取可通过千言大赛官网或百度大脑AI Studio获取。
 
@@ -22,6 +26,7 @@ ln  -s ./luge-dialogue/config ./config
 注意：在运行命令之前，一定要确保脚本中的输入、输出和参数均符合要求。在使用该命令处理训练集、验证集、测试集1和测试集2时，要分别修改脚本中的输入文件和参数列表，保证每个数据集与对应参数配置正确，保证输出文件正确。由于数据规模较大，脚本运行时间较长(尤其是训练集)，需要耐心等待，或自行分批次处理。
 
 python ./luge-dialogue/tools/convert_data_to_numerical.py ./config/spm.model
+
 最后，将id化的训练集、验证集和测试集放到data目录下(也可以放在其它目录下)，并在模型训练和测试的时候，保证数据路径与config目录下配置文件中，对应数据配置路径一致(必须).
 
 2. 下载模型
@@ -37,11 +42,15 @@ python ./luge-dialogue/tools/convert_data_to_numerical.py ./config/spm.model
 
 # 大规模数据预训练模型
 wget "https://dialogue.bj.bcebos.com/luge/12L.pretrain.tar"
+
 tar -xvf ./12L.pretrain.tar
+
 
 # 千言比赛数据微调模型
 wget "https://dialogue.bj.bcebos.com/luge/12L.finetune.tar"
+
 tar -xvf 12L.finetune.tar
+
 3. 模型训练
 模型训练命令如下：
 
@@ -94,6 +103,7 @@ save_path="./output" # 模型输出路径
 # 预测模型，配置默认路径为"12L"，可在配置文件中设置
 ln -snf 12L.pretrain 12L
 
+
 # 模型预测，一定要确保GPU环境和模型参数配置正确，具体见下文示例
 ./scripts/local/infer.sh ./config/12L_infer.conf
 预测之前，检查启动脚本与配置文件，确保配置正确：
@@ -130,10 +140,15 @@ save_path="./output" # 预测输出路径
 模型评估需要将预测结果提交到官网进行评测：
 
 step1：使用数据处理脚本将需要评测的数据样本化和id化
+
 step2：进行模型预测，获取结果
+
 step3：将预测结果准备成官网要求的格式，提交评估
+
 6. 其它
 本教程提供了"大规模数据预训练模型"和"千言比赛数据微调模型"两个模型，可作为一个基础baseline，帮助参赛者快速跑通整个参赛流程。 参赛者可以针对赛题进行其他改进，例如修改数据预处理方法，修改网络结构，修改训练方式，修改预测结果的后处理等。
 
-注意论文所提的几个模型的训练参数需要注意修改和添加。有unitransmer, plato, nsp。其他基本都能走通，小问题已经修改。
+
+注意
+论文所提的几个模型的训练参数需要注意修改和添加。有unitransmer, plato, nsp。其他基本都能走通，小问题已经修改。
 默认参数batchsize 8192下，其中uni模型显存用量12G以内，plato显存31G，nsp18G左右。训练时间0.5小时/epoch , 1小时， 0.5小时。
