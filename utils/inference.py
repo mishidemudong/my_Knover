@@ -34,6 +34,7 @@ def create_predictor(inference_model_path, is_distributed=False):
     with fluid.scope_guard(scope):
         inference_prog, feed_target_names, fetch_targets = fluid.io.load_inference_model(
             inference_model_path, exe)
+        print(f"Load model from {inference_model_path}")
 
     def __predict__(inputs):
         with fluid.scope_guard(scope):
