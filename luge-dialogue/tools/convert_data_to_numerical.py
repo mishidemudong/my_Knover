@@ -20,6 +20,7 @@ import sys
 import json
 import random
 import sentencepiece as spm
+import json
 
 sys.stdin.reconfigure(encoding="utf8")
 sys.stdout.reconfigure(encoding="utf8")
@@ -133,6 +134,7 @@ def convert_sample_to_numerical(input_data, max_seq_len=512, max_response_len=12
         output_list.append(' '.join([str(x) for x in l]))
     
     return output_list
+
 
 def to_sample_for_douban(input_file, data_type="chitchat", is_test=False):
     with open(input_file, encoding='utf8') as fp:
@@ -401,39 +403,39 @@ def to_sample_for_durecdial(input_file, data_type="recommend", is_test=False):
 if __name__ == '__main__':
     # change the input and output files to your real files
     data_process_list = [
+                            # [
+                            #     [
+                            #         ["./data/luge-dialogue/weibo/train.txt", to_sample_for_weibo, False, False],
+                            #         ["./data/luge-dialogue/douban/train.txt", to_sample_for_douban, False, False],
+                            #         ["./data/luge-dialogue/LCCC/LCCD_train.json", to_sample_for_lccc, False, False],
+                            #         ["./data/luge-dialogue/duconv/train.txt", to_sample_for_duconv, True, False],
+                            #         ["./data/luge-dialogue/kdconv/train.txt", to_sample_for_kdconv, True, False],
+                            #         ["./data/luge-dialogue/tencent/train.txt", to_sample_for_tencent, True, False],
+                            #         ["./data/luge-dialogue/DuRecDial/train.txt", to_sample_for_durecdial, True, False]
+                            #     ],
+                            #     "./data/train.txt",
+                            # ],
+                            # [
+                            #     [
+                            #         ["./data/luge-dialogue/weibo/dev.txt", to_sample_for_weibo, False, False],
+                            #         ["./data/luge-dialogue/douban/dev.txt", to_sample_for_douban, False, False],
+                            #         ["./data/luge-dialogue/LCCC/LCCD_dev.json", to_sample_for_lccc, False, False],
+                            #         ["./data/luge-dialogue/duconv/dev.txt", to_sample_for_duconv, True, False],
+                            #         ["./data/luge-dialogue/kdconv/dev.txt", to_sample_for_kdconv, True, False],
+                            #         ["./data/luge-dialogue/tencent/dev.txt", to_sample_for_tencent, True, False],
+                            #         ["./data/luge-dialogue/DuRecDial/dev.txt", to_sample_for_durecdial, True, False]
+                            #     ],
+                            #     "./data/valid.txt",
+                            # ],
                             [
                                 [
-                                    ["./data/luge-dialogue/weibo/train.txt", to_sample_for_weibo, False, False],
-                                    ["./data/luge-dialogue/douban/train.txt", to_sample_for_douban, False, False],
-                                    ["./data/luge-dialogue/LCCC/LCCD_train.json", to_sample_for_lccc, False, False],
-                                    ["./data/luge-dialogue/duconv/train.txt", to_sample_for_duconv, True, False],
-                                    ["./data/luge-dialogue/kdconv/train.txt", to_sample_for_kdconv, True, False],
-                                    ["./data/luge-dialogue/tencent/train.txt", to_sample_for_tencent, True, False],
-                                    ["./data/luge-dialogue/DuRecDial/train.txt", to_sample_for_durecdial, True, False]
-                                ],
-                                "./data/train.txt",
-                            ],
-                            [
-                                [
-                                    ["./data/luge-dialogue/weibo/dev.txt", to_sample_for_weibo, False, False],
-                                    ["./data/luge-dialogue/douban/dev.txt", to_sample_for_douban, False, False],
-                                    ["./data/luge-dialogue/LCCC/LCCD_dev.json", to_sample_for_lccc, False, False],
-                                    ["./data/luge-dialogue/duconv/dev.txt", to_sample_for_duconv, True, False],
-                                    ["./data/luge-dialogue/kdconv/dev.txt", to_sample_for_kdconv, True, False],
-                                    ["./data/luge-dialogue/tencent/dev.txt", to_sample_for_tencent, True, False],
-                                    ["./data/luge-dialogue/DuRecDial/dev.txt", to_sample_for_durecdial, True, False]
-                                ],
-                                "./data/valid.txt",
-                            ],
-                            [
-                                [
-                                    ["./data/luge-dialogue/weibo/test.txt", to_sample_for_weibo, False, True],
-                                    ["./data/luge-dialogue/douban/test.txt", to_sample_for_douban, False, True],
-                                    ["./data/luge-dialogue/LCCC/test.txt", to_sample_for_lccc, False, True],
+                                    # ["./data/luge-dialogue/weibo/test.txt", to_sample_for_weibo, False, True],
+                                    # ["./data/luge-dialogue/douban/test.txt", to_sample_for_douban, False, True],
+                                    # ["./data/luge-dialogue/LCCC/test.txt", to_sample_for_lccc, False, True],
                                     ["./data/luge-dialogue/duconv/test.txt", to_sample_for_duconv, True, True],
                                     ["./data/luge-dialogue/kdconv/test.txt", to_sample_for_kdconv, True, True],
-                                    ["./data/luge-dialogue/tencent/test.txt", to_sample_for_tencent, True, True],
-                                    ["./data/luge-dialogue/DuRecDial/test.txt", to_sample_for_durecdial, True, True]
+                                    # ["./data/luge-dialogue/tencent/test.txt", to_sample_for_tencent, True, True],
+                                    # ["./data/luge-dialogue/DuRecDial/test.txt", to_sample_for_durecdial, True, True]
                                 ],
                                 "./data/test.txt",
                             ],
@@ -441,18 +443,25 @@ if __name__ == '__main__':
     for [input_list, output_file] in data_process_list:
         truncate_type_stat[0] = truncate_type_stat[1] = truncate_type_stat[2] = truncate_type_stat[3] = truncate_type_stat[4] = 0
         fout = open(output_file, 'w')
+        oriout = open("./data/kg_data.txt", 'w')
         for [input_file, handle_method, truncate_first_turn, is_test] in input_list:
             for sample in handle_method(input_file, is_test=is_test):
                 numerical = convert_sample_to_numerical(sample, truncate_first_turn=truncate_first_turn, is_test=is_test)
                 if numerical is not None:
-                    fout.write(';'.join(numerical) + "\n")   
+                    fout.write(';'.join(numerical) + "\n")
+
+            for sample in handle_method(input_file, is_test=is_test):
+                # print(sample)
+                oriout.write(json.dumps(sample, ensure_ascii=False) + "\n")
+
+        oriout.close()
         fout.close()
 
-        T = truncate_type_stat[0] + truncate_type_stat[1] + truncate_type_stat[2] + truncate_type_stat[3] + truncate_type_stat[4]
-        FT = float(T)
-        T1 = truncate_type_stat[1]
-        T2 = truncate_type_stat[2]
-        T3 = truncate_type_stat[3]
-        T4 = truncate_type_stat[4]
-        sys.stderr.write('Total num : %d \n\ttruncate type 1: %d rate(%.4f)\n\ttruncate tye 2: %d rate(%.4f)\n\ttruncate type 3: %d rate(%.4f)\n\ttruncate type 4: %d rate(%.4f)\n' % (T, T1, (T1/FT), T2, (T2/FT), T3, (T3/FT), T4, (T4/FT)))
+        # T = truncate_type_stat[0] + truncate_type_stat[1] + truncate_type_stat[2] + truncate_type_stat[3] + truncate_type_stat[4]
+        # FT = float(T)
+        # T1 = truncate_type_stat[1]
+        # T2 = truncate_type_stat[2]
+        # T3 = truncate_type_stat[3]
+        # T4 = truncate_type_stat[4]
+        # sys.stderr.write('Total num : %d \n\ttruncate type 1: %d rate(%.4f)\n\ttruncate tye 2: %d rate(%.4f)\n\ttruncate type 3: %d rate(%.4f)\n\ttruncate type 4: %d rate(%.4f)\n' % (T, T1, (T1/FT), T2, (T2/FT), T3, (T3/FT), T4, (T4/FT)))
 
