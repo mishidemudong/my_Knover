@@ -52,6 +52,7 @@ def setup_args():
 
     args = parse_args(parser)
     args.load(args.config_path, "Model")
+    print("*all args*")
     print(json.dumps(args, indent=2))
     return args
 
@@ -95,6 +96,7 @@ def train(args):
     # run training
     timer = Timer()
     timer.start()
+    best_metrics = 0.0
     for step, data in enumerate(train_generator(), args.start_step + 1):
         outputs = task.train_step(model, data)
         timer.pause()
@@ -109,19 +111,22 @@ def train(args):
             print("\t" + ", ".join(f"{k}: {v:.4f}" for k, v in metrics.items()))
             timer.reset()
 
-        if step % args.validation_steps == 0:
-            evaluate(task, model, valid_generator, args, dev_count, gpu_id, step)
 
-        if step % args.save_steps == 0 and trainer_id == 0:
-            save_path = f"{args.save_path}/step_{step}"
-            model.save(save_path, is_checkpoint=True)
-            with open(save_path + ".finish", "w") as f:
-                pass
+        if step % args.validation_steps == 0:
+            best_metrics = evaluate(task, model, valid_generator, args, dev_count, gpu_id, step, best_metrics)
+
+        # if step % args.save_steps == 0 and trainer_id == 0:
+        #     save_path = f"{args.save_path}/step_{step}"
+        #     model.save(save_path, is_checkpoint=True)
+        #     with open(save_path + ".finish", "w") as f:
+        #         pass
+
+
 
         timer.start()
 
 
-def evaluate(task, model, generator, args, dev_count, gpu_id, training_step):
+def evaluate(task, model, generator, args, dev_count, gpu_id, training_step, best_metrics):
     outputs = None
     print("=" * 80)
     print("Evaluation:")
@@ -131,9 +136,18 @@ def evaluate(task, model, generator, args, dev_count, gpu_id, training_step):
         part_outputs = task.eval_step(model, data)
         outputs = task.merge_mertrics_and_statistics(outputs, part_outputs)
 
-        if step % args.log_steps == 0:
-            metrics = task.get_metrics(outputs)
-            print(f"\tstep {step}:" + ", ".join(f"{k}: {v:.4f}" for k, v in metrics.items()))
+        # if step % args.log_steps == 0:
+        metrics = task.get_metrics(outputs)
+        print(f"\tstep {step}:" + ", ".join(f"{k}: {v:.4f}" for k, v in metrics.items()))
+        if args.Model.model == 'NSPModel' and metrics.nsp_acc > best_metrics:
+            best_metrics = metrics.nsp_acc
+            save_path = f"{args.save_path}/step_{step}_{best_metrics}"
+            model.save(save_path, is_checkpoint=True)
+
+        elif args.Model.model == 'Plato' and metrics.loss < best_metrics:
+            best_metrics = metrics.loss
+            save_path = f"{args.save_path}/step_{step}_{best_metrics}"
+            model.save(save_path, is_checkpoint=True)
 
     if args.is_distributed:
         # merge evaluation outputs in distributed mode.
@@ -166,7 +180,7 @@ def evaluate(task, model, generator, args, dev_count, gpu_id, training_step):
         print(f"[Evaluation][{training_step}]" + ", ".join(f"{k}: {v:.4f}" for k, v in metrics.items()))
     print(f"\ttime cost: {timer.pass_time:.3f}")
     print("=" * 80)
-    return
+    return best_metrics
 
 
 if __name__ == "__main__":

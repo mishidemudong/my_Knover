@@ -123,7 +123,7 @@ def infer(args):
 
     if gpu_id == 0:
         # save inference outputs
-        inference_output = os.path.join(args.save_path, "inference_output.txt")
+        inference_output = os.path.join(args.save_path, "{}_result.txt".format(args.save_name))
         with open(inference_output, "w") as f:
             for data_id in sorted(infer_out.keys(), key=lambda x: int(x)):
                 f.write(str(infer_out[data_id][args.output_name]) + "\n")

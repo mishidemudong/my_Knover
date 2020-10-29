@@ -431,11 +431,11 @@ if __name__ == '__main__':
                                 [
                                     # ["./data/luge-dialogue/weibo/test.txt", to_sample_for_weibo, False, True],
                                     # ["./data/luge-dialogue/douban/test.txt", to_sample_for_douban, False, True],
-                                    # ["./data/luge-dialogue/LCCC/test.txt", to_sample_for_lccc, False, True],
+                                    ["./data/luge-dialogue/LCCC/test.txt", to_sample_for_lccc, False, True],
                                     ["./data/luge-dialogue/duconv/test.txt", to_sample_for_duconv, True, True],
-                                    ["./data/luge-dialogue/kdconv/test.txt", to_sample_for_kdconv, True, True],
+                                    # ["./data/luge-dialogue/kdconv/test.txt", to_sample_for_kdconv, True, True],
                                     # ["./data/luge-dialogue/tencent/test.txt", to_sample_for_tencent, True, True],
-                                    # ["./data/luge-dialogue/DuRecDial/test.txt", to_sample_for_durecdial, True, True]
+                                    ["./data/luge-dialogue/DuRecDial/test.txt", to_sample_for_durecdial, True, True]
                                 ],
                                 "./data/test.txt",
                             ],
@@ -443,16 +443,27 @@ if __name__ == '__main__':
     for [input_list, output_file] in data_process_list:
         truncate_type_stat[0] = truncate_type_stat[1] = truncate_type_stat[2] = truncate_type_stat[3] = truncate_type_stat[4] = 0
         fout = open(output_file, 'w')
-        oriout = open("./data/kg_data.txt", 'w')
+        oriout = open("./data/ori_test.txt", 'w')
         for [input_file, handle_method, truncate_first_turn, is_test] in input_list:
+            count = 0
             for sample in handle_method(input_file, is_test=is_test):
                 numerical = convert_sample_to_numerical(sample, truncate_first_turn=truncate_first_turn, is_test=is_test)
                 if numerical is not None:
                     fout.write(';'.join(numerical) + "\n")
 
+
+                if count == 20:
+                    break
+                count += 1
+
+            count = 0
             for sample in handle_method(input_file, is_test=is_test):
                 # print(sample)
                 oriout.write(json.dumps(sample, ensure_ascii=False) + "\n")
+
+                if count == 20:
+                    break
+                count += 1
 
         oriout.close()
         fout.close()

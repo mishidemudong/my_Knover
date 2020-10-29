@@ -163,11 +163,11 @@ class DialogGeneration(Task):
     def add_cmdline_args(cls, parser):
         """Add cmdline argurments."""
         group = parser.add_argument_group("Task")
-        #group.add_argument("--do_generation", type=str2bool, default=False)
-        group.add_argument("--do_generation", default=False)
+        group.add_argument("--do_generation", type=str2bool, default=False)
         group.add_argument("--is_cn", type=str2bool, default=False)
 
-        group.add_argument("--nsp_inference_model_path", type=str, default=None)
+        group.add_argument("--nsp_inference_model_path", type=str, default='./nsp_model/saved_10_27')
+        #group.add_argument("--nsp_inference_model_path", type=str, default=False)
         group.add_argument("--nsp_attention_style", type=str, default="bidirectional")
 
         group.add_argument("--ranking_score", type=str, default="decode_score")
@@ -233,8 +233,14 @@ class DialogGeneration(Task):
                     info["score"] -= 1e3
                 elif info["in_turn_repetition"] > 0:
                     info["score"] -= 1e3
-            infos = sorted(infos, key=lambda info: -info["score"])
+
+            # print("===========infos is:", infos)
+            if self.nsp_predictor is not None:
+                infos = sorted(infos, key=lambda info: info["nsp_score"], reverse=True)
+            else:
+                infos = sorted(infos, key=lambda info: -info["score"])
             pred = infos[0]
+            print("===========pred is:", pred)
             keep_attr = ["data_id", "score", "response"]
             pred = {k: pred[k] for k in keep_attr}
             predictions.append(pred)
