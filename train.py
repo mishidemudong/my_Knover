@@ -29,8 +29,8 @@ import models
 import tasks
 from utils import check_cuda, Timer
 from utils.args import parse_args, str2bool
-
-
+import random
+from convert_data_to_numerical import shuffledatafile
 def setup_args():
     """
     Setup arguments.
@@ -96,7 +96,11 @@ def train(args):
     # run training
     timer = Timer()
     timer.start()
-    best_metrics = 0.0
+    if args.Model.model == 'NSPModel':
+        best_metrics = 0.0
+    else:
+        best_metrics = 10000
+    shuffledatafile()
     for step, data in enumerate(train_generator(), args.start_step + 1):
         outputs = task.train_step(model, data)
         timer.pause()
@@ -113,74 +117,51 @@ def train(args):
 
 
         if step % args.validation_steps == 0:
-            best_metrics = evaluate(task, model, valid_generator, args, dev_count, gpu_id, step, best_metrics)
 
+            shuffledatafile()
+            metrics = evaluate(task, model, valid_generator, args, dev_count, gpu_id, step)
+            if args.Model.model == 'NSPModel' and metrics['nsp_acc'] > best_metrics:
+                best_metrics = metrics['nsp_acc']
+                save_path = f"{args.save_path}/step_{step}_{best_metrics}"
+                model.save(save_path, is_checkpoint=True)
+
+            elif args.Model.model == 'Plato' and metrics['loss'] < best_metrics:
+                best_metrics = metrics['loss']
+                save_path = f"{args.save_path}/step_{step}_{best_metrics}"
+                model.save(save_path, is_checkpoint=True)
         # if step % args.save_steps == 0 and trainer_id == 0:
         #     save_path = f"{args.save_path}/step_{step}"
         #     model.save(save_path, is_checkpoint=True)
         #     with open(save_path + ".finish", "w") as f:
         #         pass
 
-
-
         timer.start()
 
 
-def evaluate(task, model, generator, args, dev_count, gpu_id, training_step, best_metrics):
+def evaluate(task, model, generator, args, dev_count, gpu_id, training_step):
     outputs = None
     print("=" * 80)
     print("Evaluation:")
     timer = Timer()
     timer.start()
+
     for step, data in enumerate(generator(), 1):
         part_outputs = task.eval_step(model, data)
         outputs = task.merge_mertrics_and_statistics(outputs, part_outputs)
 
-        # if step % args.log_steps == 0:
-        metrics = task.get_metrics(outputs)
-        print(f"\tstep {step}:" + ", ".join(f"{k}: {v:.4f}" for k, v in metrics.items()))
-        if args.Model.model == 'NSPModel' and metrics.nsp_acc > best_metrics:
-            best_metrics = metrics.nsp_acc
-            save_path = f"{args.save_path}/step_{step}_{best_metrics}"
-            model.save(save_path, is_checkpoint=True)
+        if step % args.log_steps == 0:
+            metrics = task.get_metrics(outputs)
+            print(f"\tstep {step}:" + ", ".join(f"{k}: {v:.4f}" for k, v in metrics.items()))
 
-        elif args.Model.model == 'Plato' and metrics.loss < best_metrics:
-            best_metrics = metrics.loss
-            save_path = f"{args.save_path}/step_{step}_{best_metrics}"
-            model.save(save_path, is_checkpoint=True)
+        if step == 200:
+            break
 
-    if args.is_distributed:
-        # merge evaluation outputs in distributed mode.
-        part_file = os.path.join(args.save_path, f"evaluation_output.part_{gpu_id}")
-        with open(part_file, "w") as fp:
-            json.dump(outputs, fp, ensure_ascii=False)
-        part_finish_file = os.path.join(args.save_path, f"evaluation_output.part_{gpu_id}.finish")
-        with open(part_finish_file, "w"):
-            pass
-
-        if gpu_id == 0:
-            part_files = f"evaluation_output.part_*.finish"
-            while True:
-                ret = subprocess.getoutput(f"find {args.save_path} -maxdepth 1 -name {part_files}")
-                num_completed = len(ret.split("\n"))
-                if num_completed != dev_count:
-                    time.sleep(1)
-                    continue
-                outputs = None
-                for dev_id in range(dev_count):
-                    part_file = os.path.join(args.save_path, f"evaluation_output.part_{dev_id}")
-                    with open(part_file, "r") as fp:
-                        part_outputs = json.load(fp)
-                        outputs = task.merge_mertrics_and_statistics(outputs, part_outputs)
-                break
-            subprocess.getoutput("rm " + os.path.join(args.save_path, f"evaluation_output.part*"))
-
-    if gpu_id == 0:
-        metrics = task.get_metrics(outputs)
-        print(f"[Evaluation][{training_step}]" + ", ".join(f"{k}: {v:.4f}" for k, v in metrics.items()))
+    # if gpu_id == 0:
+    metrics = task.get_metrics(outputs)
+    print(f"[Evaluation][{training_step}]" + ", ".join(f"{k}: {v:.4f}" for k, v in metrics.items()))
     print(f"\ttime cost: {timer.pass_time:.3f}")
     print("=" * 80)
-    return best_metrics
+    return metrics
 
 
 if __name__ == "__main__":

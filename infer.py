@@ -36,6 +36,7 @@ def setup_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--is_distributed", type=str2bool, default=False)
     parser.add_argument("--save_path", type=str, default="output")
+    parser.add_argument("--save_name", type=str, default="plato")
     parser.add_argument("--infer_file", type=str, required=True)
     parser.add_argument("--output_name", type=str, required=True)
 
@@ -46,7 +47,7 @@ def setup_args():
 
     args = parse_args(parser)
     args.load(args.config_path, "Model")
-    args.run_infer = True # only build infer program
+    args.run_infer = True# only build infer program
     print(json.dumps(args, indent=2))
     return args
 

@@ -227,7 +227,7 @@ class DialogGeneration(Task):
             infos = group[data_id]
             for info in infos:
                 info["score"] = info[self.ranking_score]
-                if self.max_dec_len is not None and info["num_token"] >= self.max_dec_len: # not ending
+                if self.max_dec_len is not None and info["num_token"] >= self.max_dec_len:# not ending
                     info["score"] -= 1e3
                 elif info["cross_turn_repetition"] > 0:
                     info["score"] -= 1e3

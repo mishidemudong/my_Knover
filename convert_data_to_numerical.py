@@ -30,7 +30,7 @@ if len(sys.argv) < 2:
     exit()
 
 sp = spm.SentencePieceProcessor()
-sp.load(sys.argv[1])
+sp.load('./config/spm.model')
 
 type_dict = {"chitchat": 30001, "knowledge": 30002, "recommend": 30003}
 
@@ -70,16 +70,16 @@ def truncate_ids_list(ids_list, cut_len=512, truncate_first_turn=False):
     new_ids_list.reverse()
     return cut_type, new_ids_list
 
-def convert_sample_to_numerical(input_data, max_seq_len=512, max_response_len=128, truncate_first_turn=False, is_test=False):
-    assert "type" in input_data and "context" in input_data and "response" in input_data and "knowledge" in input_data
+def convert_sample_to_numerical(sample, max_seq_len=512, max_response_len=128, truncate_first_turn=False, is_test=False):
+    assert "type" in sample and "context" in sample and "response" in sample and "knowledge" in sample
 
     for key in sample:
         sample[key] = re.sub("  +", " ", sample[key])
 
-    data_type = input_data["type"]
-    context = input_data["context"]
-    response = input_data["response"]
-    knowledge = input_data["knowledge"]
+    data_type = sample["type"]
+    context = sample["context"]
+    response = sample["response"]
+    knowledge = sample["knowledge"]
 
     # type
     assert data_type in type_dict
@@ -426,7 +426,7 @@ def shuffledatafile():
         #     "./data/train.txt",
         # ],
         [
-            valid_list[:4],
+            valid_list[:3],
             "./data/valid.txt",
         ],
         # [
