@@ -35,7 +35,7 @@ class UnifiedTransformer(Model):
         group = Model.add_cmdline_args(parser)
         group.add_argument("--max_seq_len", type=int, default=256)
         group.add_argument("--weight_sharing", type=str2bool, default=True)
-        group.add_argument("--mem_efficient", type=str2bool, default=True)
+        group.add_argument("--mem_efficient", type=str2bool, default=False)
 
         Generator.add_cmdline_args(parser)
         return group

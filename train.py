@@ -118,7 +118,7 @@ def train(args):
 
         if step % args.validation_steps == 0:
 
-            shuffledatafile()
+            # shuffledatafile()
             metrics = evaluate(task, model, valid_generator, args, dev_count, gpu_id, step)
             if args.Model.model == 'NSPModel' and metrics['nsp_acc'] > best_metrics:
                 best_metrics = metrics['nsp_acc']
